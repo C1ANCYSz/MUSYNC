@@ -18,6 +18,15 @@ func runSync(client *http.Client, deezerArl string, playlists []Playlist) {
 	deezerToken, deezerUserID, err := deezer.GetDeezerCreds(client, deezerArl)
 	if err != nil {
 		logger.Error("deezer auth failed", "err", err)
+		tgToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+		tgChatID := os.Getenv("TELEGRAM_CHAT_ID")
+		if tgToken != "" && tgChatID != "" {
+			if tgErr := telegram.SendErrorMessage(tgToken, tgChatID, err.Error()); tgErr != nil {
+				logger.Error("failed to send telegram auth error notification", "err", tgErr)
+			} else {
+				logger.Info("telegram auth error notification sent successfully")
+			}
+		}
 		return
 	}
 

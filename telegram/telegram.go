@@ -148,3 +148,34 @@ func SendSyncSummary(botToken, chatID string, duration time.Duration, audits []A
 
 	return nil
 }
+
+func SendErrorMessage(botToken, chatID string, errMsg string) error {
+	if botToken == "" || chatID == "" {
+		return nil
+	}
+
+	payload := sendMessagePayload{
+		ChatID:    chatID,
+		Text:      fmt.Sprintf("*DEEZER SYNC ERROR*\n\n```\nAuthentication failed: %s\n```\nPlease refresh your DEEZER_ARL token.", errMsg),
+		ParseMode: "Markdown",
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal payload: %w", err)
+	}
+
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
+	resp, err := http.Post(apiURL, "application/json", bytes.NewReader(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("http request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("telegram API returned status: %s", resp.Status)
+	}
+
+	return nil
+}
+
